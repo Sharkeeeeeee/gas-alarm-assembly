@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>瓦斯警報器負載板組裝圖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+*,*::before,*::after{box-sizing:border-box}
+html{color-scheme:light}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+
+/* Layout: bench sheet. Board viewer on top with the part card beside it, soldering steps below as a checklist. */
+:root{
+  --bg:#f2f4f0; --panel:#ffffff; --ink:#17201b; --muted:#59665e; --line:#d6ddd6;
+  --mask:#1f3d2e; --copper:#a85a24; --hl:#e09a2b; --hl-soft:rgba(224,154,43,.22);
+  --done:#2f7d4f; --on-mask:#ffffff;
+  --f-body:"Noto Sans TC",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#111613; --panel:#1a211d; --ink:#e4ebe6; --muted:#9aa79f; --line:#2c3630;
+  --mask:#2f5a44; --copper:#d88a52; --hl:#f0b04a; --hl-soft:rgba(240,176,74,.25); --done:#5cb983; --on-mask:#ffffff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#111613; --panel:#1a211d; --ink:#e4ebe6; --muted:#9aa79f; --line:#2c3630;
+  --mask:#2f5a44; --copper:#d88a52; --hl:#f0b04a; --hl-soft:rgba(240,176,74,.25); --done:#5cb983; --on-mask:#ffffff; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:28px}
+h1{font-size:clamp(22px,3.2vw,30px);margin:0;letter-spacing:.02em;text-wrap:balance}
+h2{font-size:18px;margin:0 0 12px;text-wrap:balance}
+.meta{color:var(--muted);margin:0;font-size:14px}
+.mono{font-family:var(--f-mono)}
+header{display:grid;gap:4px}
+.viewer{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+@media (max-width:860px){.viewer{grid-template-columns:minmax(0,1fr)}}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.tab{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 14px;border-radius:999px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--mask);border-color:var(--mask);color:var(--on-mask)}
+.tab:focus-visible,.chip:focus-visible,.hs:focus-visible,input:focus-visible{outline:2px solid var(--hl);outline-offset:2px}
+.stage{position:relative;border-radius:6px;overflow:hidden;background:var(--mask);line-height:0}
+.stage img{width:100%;height:auto;display:block}
+.hs{position:absolute;border:1.5px solid transparent;border-radius:3px;background:transparent;cursor:pointer;padding:0}
+.hs:hover{border-color:rgba(255,255,255,.75)}
+.hs.on{border-color:var(--hl);background:var(--hl-soft);box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+.caption{color:var(--muted);font-size:13px;margin:8px 0 0;line-height:1.5}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;min-width:0}
+.part .ref{font-family:var(--f-mono);font-weight:600;font-size:22px;color:var(--copper)}
+.part .val{font-weight:700;font-size:17px}
+.part .role{color:var(--muted);font-size:13px}
+.part .note{margin:10px 0 0}
+.part .stepno{display:inline-block;margin-top:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px}
+.empty{color:var(--muted);margin:0}
+.steps{display:grid;gap:10px}
+.step{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px 14px}
+.step.done{border-color:var(--done)}
+.step.done .stitle{color:var(--done)}
+.step input{width:20px;height:20px;margin:3px 0 0;accent-color:var(--done)}
+.stitle{font-weight:700}
+.stitle.click{cursor:pointer}
+.stitle .n{font-family:var(--f-mono);color:var(--copper);margin-right:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0}
+.chip{font-family:var(--f-mono);font-size:12.5px;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:4px;padding:1px 7px;cursor:pointer}
+.chip.on{border-color:var(--hl);background:var(--hl-soft)}
+.tip{color:var(--muted);font-size:14px;margin:0}
+.rules{width:100%;border-collapse:collapse;font-size:14px}
+.rules th,.rules td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.rules th{color:var(--muted);font-weight:500;font-size:13px}
+.tablewrap{overflow-x:auto}
+.two{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:18px}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr)}}
+.progress{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-weight:500;margin-left:6px}
+@media (prefers-reduced-motion:no-preference){.hs{transition:background .15s,border-color .15s}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>瓦斯警報器負載板組裝圖</h1>
+    <p class="meta">單面板 <span class="mono">163 × 64 mm</span> · 39 個零件 · 3 條跳線 · 零件插在沒有銅的那面</p>
+  </header>
+
+  <section class="viewer">
+    <div style="min-width:0">
+      <div class="tabs" role="tablist" aria-label="檢視角度">
+        <button class="tab" role="tab" id="tab-top" aria-selected="true" data-v="top">零件面</button>
+        <button class="tab" role="tab" id="tab-iso" aria-selected="false" data-v="iso">立體圖</button>
+        <button class="tab" role="tab" id="tab-bottom" aria-selected="false" data-v="bottom">銅箔面</button>
+      </div>
+      <div class="stage" id="stage">
+        <img id="img" src="top.jpg" alt="負載板零件面 3D 圖" width="1960" height="769">
+      </div>
+      <p class="caption" id="cap">點板子上的零件看規格和方向。板子左邊是電源輸入，右邊是警報輸出。</p>
+    </div>
+    <aside class="card part" id="part" aria-live="polite">
+      <p class="empty">點選零件，這裡會顯示規格、插件方向和第幾步焊。</p>
+    </aside>
+  </section>
+
+  <section>
+    <h2>焊接順序<span class="progress" id="prog"></span></h2>
+    <div class="steps" id="steps"></div>
+  </section>
+
+  <section class="two">
+    <div class="card">
+      <h2>方向怎麼看</h2>
+      <div class="tablewrap"><table class="rules">
+        <thead><tr><th>零件</th><th>怎麼認</th><th>這塊板子</th></tr></thead>
+        <tbody>
+          <tr><td>二極體</td><td>有環的一端是 K（負極）</td><td>D5、D6、D3 環朝左；D2、D4 環朝板子上緣</td></tr>
+          <tr><td>電解電容</td><td>長腳是 +，白色條紋是 −</td><td>C3 的 + 在右；C4、C6 的 + 在左</td></tr>
+          <tr><td>LED</td><td>短腳、外殼平邊是 K</td><td>兩顆 LED 的 K 都插左邊方形焊盤</td></tr>
+          <tr><td>IC</td><td>缺口或圓點那端是第 1 腳</td><td>U2、U3 缺口都朝板子上緣</td></tr>
+          <tr><td>PN2222A</td><td>平面對自己，腳從左到右 E、B、C</td><td>Q1、Q2 平面都朝板子下緣</td></tr>
+          <tr><td>7805</td><td>印字面對自己，腳從左到右 IN、GND、OUT</td><td>金屬片朝板子上緣</td></tr>
+          <tr><td>蜂鳴器</td><td>標 + 的是長腳</td><td>BZ1 的 + 在左</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <div class="card">
+      <h2>對外接線</h2>
+      <p style="margin:0 0 8px">J1 接 12V 電源板的輸出端子：</p>
+      <table class="rules">
+        <tbody>
+          <tr><td class="mono">J1 上</td><td>+12V（經 D2 反接保護）</td></tr>
+          <tr><td class="mono">J1 下</td><td>GND</td></tr>
+        </tbody>
+      </table>
+      <p class="tip" style="margin-top:10px">接反時 D2 會擋住，板子不會壞，但也不會動作。通電後綠色 LED2 會亮。開機約 171 秒內不會警報，這是讓 MQ-2 預熱的開機延遲。</p>
+    </div>
+  </section>
+</div>
+
+<script>
+const DATA = {"parts": [{"ref": "J1", "v": "12V 輸入端子", "role": "2P 5.0mm", "note": "電線入口朝板子左邊。上面那顆螺絲接電源板 +12V，下面接 GND。", "step": 8, "side": "top", "l": 0.15, "t": 68.67, "w": 6.68, "h": 17.34}, {"ref": "D2", "v": "1N4002", "role": "反接保護", "note": "白色環（K）朝板子上緣。", "step": 3, "side": "top", "l": 7.58, "t": 44.69, "w": 2.02, "h": 20.23}, {"ref": "D5", "v": "1N4002", "role": "7805 保護", "note": "白色環（K）朝左。", "step": 3, "side": "top", "l": 10.18, "t": 31.8, "w": 7.94, "h": 5.16}, {"ref": "U1", "v": "7805", "role": "5V 穩壓", "note": "金屬散熱片朝板子上緣，三支腳從左到右是 IN、GND、OUT。散熱片用 M3 螺絲鎖在金屬片上。", "step": 10, "side": "top", "l": 9.35, "t": 19.61, "w": 6.5, "h": 7.81}, {"ref": "C1", "v": "0.33µF（334）", "role": "瓷片電容", "note": "沒有方向。", "step": 5, "side": "top", "l": 7.92, "t": 38.2, "w": 4.4, "h": 4.84}, {"ref": "C2", "v": "0.1µF（104）", "role": "瓷片電容", "note": "沒有方向。", "step": 5, "side": "top", "l": 13.44, "t": 41.33, "w": 4.4, "h": 4.84}, {"ref": "C3", "v": "100µF 16V", "role": "電解電容", "note": "長腳（+）在右邊，外殼白色條紋（−）朝左。", "step": 7, "side": "top", "l": 13.07, "t": 49.3, "w": 4.22, "h": 10.78}, {"ref": "R9", "v": "330Ω", "role": "電阻", "note": "沒有方向。", "step": 2, "side": "top", "l": 17.45, "t": 57.67, "w": 1.9, "h": 19.28}, {"ref": "LED2", "v": "綠色 LED", "role": "電源指示燈", "note": "短腳（K，外殼平邊）插左邊的方形焊盤。3D 圖的模型是紅色，實際用綠色。", "step": 9, "side": "top", "l": 14.74, "t": 80.86, "w": 3.99, "h": 10.16}, {"ref": "MQ1", "v": "MQ-2", "role": "裸感測器，直接焊在板上", "note": "不用腳座。兩支加熱腳（H）對準最左和最右兩個孔，轉 180° 插也一樣。底座離板子留 3～5mm，不要壓到底。烙鐵約 330～350°C，每支腳 3 秒內焊好，跳著焊（1→4→2→5→3→6）。這 6 個孔鑽 1.0mm。", "step": 11, "side": "top", "l": 20.6, "t": 5.56, "w": 12.01, "h": 30.62}, {"ref": "R1", "v": "10kΩ", "role": "負載電阻 RL", "note": "沒有方向。", "step": 2, "side": "top", "l": 19.91, "t": 38.92, "w": 1.9, "h": 19.3}, {"ref": "R14", "v": "10kΩ", "role": "鎖定回授", "note": "沒有方向。", "step": 2, "side": "top", "l": 32.79, "t": 23.81, "w": 1.9, "h": 19.3}, {"ref": "D6", "v": "1N4148", "role": "鎖定二極體", "note": "黑色環（K）朝左。", "step": 3, "side": "top", "l": 33.07, "t": 18.28, "w": 6.02, "h": 4.06}, {"ref": "U2", "v": "LM2904P", "role": "IC 座 DIP-8", "note": "先焊 IC 座，缺口朝板子上緣。最後才插 IC，缺口一樣朝上。LM2904 和 LM358 腳位相同。", "step": 4, "side": "top", "l": 37.36, "t": 28.81, "w": 6.03, "h": 16.8}, {"ref": "R3", "v": "10kΩ", "role": "送 RST", "note": "沒有方向。", "step": 2, "side": "top", "l": 39.21, "t": 13.2, "w": 7.57, "h": 4.84}, {"ref": "C7", "v": "0.1µF（104）", "role": "U2 旁路電容", "note": "沒有方向，貼近 U2。", "step": 5, "side": "top", "l": 44.12, "t": 22.58, "w": 4.4, "h": 4.84}, {"ref": "VR1", "v": "10k 3386P", "role": "可調門檻", "note": "三支腳只有一種插法。調整螺絲轉的是警報門檻。", "step": 8, "side": "top", "l": 22.65, "t": 53.75, "w": 6.21, "h": 15.83}, {"ref": "SW2", "v": "RESET", "role": "6mm 按鈕", "note": "腳距寬的方向對準左右，只插得進一種方向。", "step": 8, "side": "top", "l": 22.06, "t": 79.61, "w": 5.89, "h": 11.87}, {"ref": "SW1", "v": "TEST", "role": "6mm 按鈕", "note": "腳距寬的方向對準左右，只插得進一種方向。", "step": 8, "side": "top", "l": 29.42, "t": 79.61, "w": 5.89, "h": 11.87}, {"ref": "R15", "v": "1kΩ", "role": "測試按鈕限流", "note": "沒有方向。", "step": 2, "side": "top", "l": 35.53, "t": 86.64, "w": 7.57, "h": 4.84}, {"ref": "R13", "v": "10kΩ", "role": "Q2 基極", "note": "沒有方向。", "step": 2, "side": "top", "l": 44.12, "t": 32.8, "w": 7.57, "h": 4.84}, {"ref": "Q2", "v": "PN2222A", "role": "開機延遲開關", "note": "平面朝板子下緣，從左到右是 E、B、C。PN2222A 腳距比板上的孔窄，兩旁的腳稍微往外撥。", "step": 6, "side": "top", "l": 53.34, "t": 33.17, "w": 4.42, "h": 7.53}, {"ref": "R11", "v": "47kΩ", "role": "門檻分壓", "note": "沒有方向。", "step": 2, "side": "top", "l": 45.67, "t": 45.17, "w": 1.9, "h": 19.3}, {"ref": "R12", "v": "100kΩ", "role": "門檻分壓", "note": "沒有方向。", "step": 2, "side": "top", "l": 45.67, "t": 65.48, "w": 1.9, "h": 19.28}, {"ref": "R10", "v": "100kΩ", "role": "延遲充電", "note": "沒有方向。", "step": 2, "side": "top", "l": 49.36, "t": 52.98, "w": 1.9, "h": 19.28}, {"ref": "D4", "v": "1N4148", "role": "C6 放電", "note": "黑色環（K）朝板子上緣。", "step": 3, "side": "top", "l": 53.19, "t": 48.3, "w": 1.6, "h": 15.33}, {"ref": "C6", "v": "1500µF 16V", "role": "延遲電容", "note": "長腳（+）在左邊，白色條紋（−）朝右。直徑約 10mm，最高的零件之一。", "step": 7, "side": "top", "l": 51.66, "t": 72.98, "w": 6.49, "h": 16.53}, {"ref": "U3", "v": "TLC555", "role": "IC 座 DIP-8", "note": "先焊 IC 座，缺口朝板子上緣。一定要用 CMOS 的 TLC555，不能用 NE555。", "step": 4, "side": "top", "l": 68.04, "t": 22.56, "w": 6.02, "h": 16.8}, {"ref": "C8", "v": "0.1µF（104）", "role": "U3 旁路電容", "note": "沒有方向，貼近 U3。", "step": 5, "side": "top", "l": 68.66, "t": 13.2, "w": 4.4, "h": 4.84}, {"ref": "R4", "v": "10kΩ", "role": "555 定時", "note": "沒有方向。", "step": 2, "side": "top", "l": 76.36, "t": 7.67, "w": 1.89, "h": 19.3}, {"ref": "R5", "v": "68kΩ", "role": "555 定時", "note": "沒有方向。", "step": 2, "side": "top", "l": 76.36, "t": 28.77, "w": 1.89, "h": 19.3}, {"ref": "C4", "v": "10µF 16V", "role": "555 定時電容", "note": "長腳（+）在左邊，白色條紋（−）朝右。你買的這顆腳距 2.0mm，板子孔距 2.5mm，腳稍微撥開就好。", "step": 7, "side": "top", "l": 72.67, "t": 48.77, "w": 3.42, "h": 8.72}, {"ref": "C5", "v": "10nF（103）", "role": "CONT 電容", "note": "沒有方向。", "step": 5, "side": "top", "l": 70.22, "t": 43.61, "w": 1.89, "h": 11.22}, {"ref": "R6", "v": "1kΩ", "role": "Q1 基極", "note": "沒有方向。", "step": 2, "side": "top", "l": 65.59, "t": 63.2, "w": 7.57, "h": 4.84}, {"ref": "Q1", "v": "PN2222A", "role": "警報驅動", "note": "平面朝板子下緣，從左到右是 E、B、C。PN2222A 腳距比板上的孔窄，兩旁的腳稍微往外撥。", "step": 6, "side": "top", "l": 79.1, "t": 55.05, "w": 4.41, "h": 7.53}, {"ref": "D3", "v": "1N4148", "role": "蜂鳴器保護", "note": "黑色環（K）朝左。", "step": 3, "side": "top", "l": 83.99, "t": 63.59, "w": 6.02, "h": 4.06}, {"ref": "BZ1", "v": "12V 有源蜂鳴器", "role": "警報聲", "note": "「+」長腳插左邊的孔。", "step": 9, "side": "top", "l": 83.13, "t": 71.41, "w": 7.72, "h": 19.69}, {"ref": "R7", "v": "1kΩ", "role": "LED1 限流", "note": "沒有方向。", "step": 2, "side": "top", "l": 95.99, "t": 45.17, "w": 1.89, "h": 19.3}, {"ref": "LED1", "v": "紅色 LED", "role": "警報燈", "note": "短腳（K，外殼平邊）插左邊的方形焊盤。", "step": 9, "side": "top", "l": 93.26, "t": 79.3, "w": 4.0, "h": 10.16}, {"ref": "JP1", "v": "跳線", "role": "VS（感測訊號）", "note": "一端在 R1 上方的孔，另一端在 R1 右下方的孔。約 11mm，從 R1 旁邊走，不要壓到電阻。", "step": 1, "side": "top", "l": 20.0, "t": 34.38, "w": 4.54, "h": 19.53}, {"ref": "JP2", "v": "跳線", "role": "VS（Q2 那段）", "note": "在 C6 左上方，兩個孔之間約 4mm。", "step": 1, "side": "top", "l": 49.63, "t": 71.09, "w": 3.5, "h": 8.91}, {"ref": "JP3", "v": "銅箔面跳線", "role": "TLC555 第 2 腳接第 6 腳", "note": "焊在銅箔面：U3 第 2 腳焊點接第 6 腳焊點，用有絕緣皮的線，跨過中間的線路。", "step": 12, "side": "bottom", "l": 13.5, "t": 26.88, "w": 6.38, "h": 8.12}], "steps": [{"title": "零件面跳線", "refs": ["JP1", "JP2"], "tip": "用剪下來的電阻腳或單芯線，平貼板面，兩端穿過專用的孔焊好。"}, {"title": "電阻", "refs": ["R1", "R3", "R4", "R5", "R6", "R7", "R9", "R10", "R11", "R12", "R13", "R14", "R15"], "tip": "最矮的先焊。電阻沒有方向，色環朝同一邊比較好檢查。"}, {"title": "二極體", "refs": ["D2", "D5", "D3", "D4", "D6"], "tip": "有環的那端是 K（負極），照板上的 K 字對齊。1N4002 是黑色的大顆，1N4148 是玻璃小顆。"}, {"title": "IC 座", "refs": ["U2", "U3"], "tip": "缺口都朝板子上緣。先焊對角兩支腳，確認座子貼平再焊其他腳。"}, {"title": "瓷片電容", "refs": ["C1", "C2", "C5", "C7", "C8"], "tip": "沒有方向。看電容上印的數字：104、334、103。"}, {"title": "電晶體", "refs": ["Q1", "Q2"], "tip": "平面朝板子下緣。PN2222A 兩旁的腳稍微往外撥對準孔，焊的時候留 3～5mm 腳長避免燙壞。"}, {"title": "電解電容", "refs": ["C3", "C4", "C6"], "tip": "長腳是 +，外殼白色條紋那側是 −。插反通電會爆。"}, {"title": "按鈕、可變電阻、端子", "refs": ["SW1", "SW2", "VR1", "J1"], "tip": "J1 電線入口朝板子外面。"}, {"title": "LED 與蜂鳴器", "refs": ["LED1", "LED2", "BZ1"], "tip": "LED 短腳（平邊）插方形焊盤。蜂鳴器 + 在左。"}, {"title": "7805 與散熱片", "refs": ["U1"], "tip": "先把散熱片鎖在 7805 上再焊，金屬片朝板子上緣。"}, {"title": "MQ-2", "refs": ["MQ1"], "tip": "不用腳座，直接焊。底座離板子 3～5mm，每支腳 3 秒內焊好，6 支腳跳著焊讓它散熱。"}, {"title": "銅箔面跳線", "refs": ["JP3"], "tip": "翻到銅箔面，用有絕緣皮的細線把 U3 第 2 腳和第 6 腳的焊點連起來，線要貼平，不要碰到其他焊點。"}, {"title": "檢查後才插 IC", "refs": [], "tip": "先不插 LM2904、TLC555。量 +12V 對 GND 沒有短路，再通電量 7805 輸出約 5V、U2 和 U3 第 8 腳約 12V，都正確才斷電插上兩顆 IC。MQ-2 通電後會發熱，摸起來溫溫的是正常的。"}]};
+const imgs = {top:'top.jpg', iso:'iso.jpg', bottom:'bottom.jpg'};
+const alts = {top:'負載板零件面 3D 圖', iso:'負載板立體 3D 圖', bottom:'負載板銅箔面 3D 圖（左右相反）'};
+const caps = {
+  top:'點板子上的零件看規格和方向。板子左邊是電源輸入，右邊是警報輸出。',
+  iso:'從前方斜看的立體圖。MQ-2 和 VR1 在 KiCad 裡沒有 3D 模型，只畫出外框。',
+  bottom:'從銅箔面看，左右是相反的。JP3 焊在這一面，點它看說明。'
+};
+let view = 'top';
+let sel = new Set();
+const stage = document.getElementById('stage');
+const img = document.getElementById('img');
+const partBox = document.getElementById('part');
+const byRef = Object.fromEntries(DATA.parts.map(p => [p.ref, p]));
+let store = {};
+try { store = JSON.parse(localStorage.getItem('ga-steps') || '{}') || {}; } catch (e) { store = {}; }
+
+function drawHotspots() {
+  stage.querySelectorAll('.hs').forEach(n => n.remove());
+  if (view === 'iso') return;
+  DATA.parts.filter(p => p.side === view).forEach(p => {
+    const b = document.createElement('button');
+    b.className = 'hs' + (sel.has(p.ref) ? ' on' : '');
+    Object.assign(b.style, {left: p.l + '%', top: p.t + '%', width: p.w + '%', height: p.h + '%'});
+    b.setAttribute('aria-label', p.ref + ' ' + p.v);
+    b.title = p.ref + '  ' + p.v;
+    b.addEventListener('click', () => pick([p.ref]));
+    stage.appendChild(b);
+  });
+}
+function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; e.textContent = txt; return e; }
+function showPart(ref) {
+  const p = byRef[ref];
+  partBox.innerHTML = '';
+  if (!p) { partBox.append(el('p', 'empty', '點選零件，這裡會顯示規格、插件方向和第幾步焊。')); return; }
+  const st = DATA.steps[p.step - 1];
+  partBox.append(el('div', 'ref', p.ref), el('div', 'val', p.v), el('div', 'role', p.role), el('p', 'note', p.note));
+  if (st) partBox.append(el('span', 'stepno', '第 ' + p.step + ' 步：' + st.title));
+}
+function pick(refs) {
+  sel = new Set(refs);
+  const want = refs.some(r => byRef[r] && byRef[r].side === 'bottom') ? 'bottom' : 'top';
+  if (view !== want) setView(want); else drawHotspots();
+  showPart(refs[0]);
+  document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', sel.has(c.dataset.ref)));
+}
+function setView(v) {
+  view = v;
+  img.src = imgs[v];
+  img.alt = alts[v];
+  document.getElementById('cap').textContent = caps[v];
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.v === v ? 'true' : 'false'));
+  drawHotspots();
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setView(t.dataset.v)));
+
+function renderSteps() {
+  const box = document.getElementById('steps');
+  box.innerHTML = '';
+  let done = 0;
+  DATA.steps.forEach((s, i) => {
+    const row = document.createElement('div');
+    row.className = 'step' + (store[i] ? ' done' : '');
+    if (store[i]) done++;
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.id = 'step-' + i; cb.checked = !!store[i];
+    cb.setAttribute('aria-label', '第 ' + (i + 1) + ' 步完成');
+    cb.addEventListener('change', () => {
+      store[i] = cb.checked;
+      try { localStorage.setItem('ga-steps', JSON.stringify(store)); } catch (e) {}
+      renderSteps();
+    });
+    const body = document.createElement('div');
+    body.style.minWidth = '0';
+    const t = document.createElement('div');
+    t.className = 'stitle' + (s.refs.length ? ' click' : '');
+    t.append(el('span', 'n', String(i + 1).padStart(2, '0')), document.createTextNode(s.title));
+    if (s.refs.length) t.addEventListener('click', () => pick(s.refs));
+    body.append(t);
+    if (s.refs.length) {
+      const chips = document.createElement('div');
+      chips.className = 'chips';
+      s.refs.forEach(r => {
+        const c = document.createElement('button');
+        c.className = 'chip' + (sel.has(r) ? ' on' : '');
+        c.dataset.ref = r;
+        c.textContent = r + (byRef[r] ? ' ' + byRef[r].v.replace(/（.*?）/, '') : '');
+        c.addEventListener('click', () => pick([r]));
+        chips.append(c);
+      });
+      body.append(chips);
+    }
+    body.append(el('p', 'tip', s.tip));
+    row.append(cb, body);
+    box.append(row);
+  });
+  document.getElementById('prog').textContent = done + ' / ' + DATA.steps.length;
+}
+renderSteps();
+pick(['U1']);
+</script>
+</body>
+</html>
