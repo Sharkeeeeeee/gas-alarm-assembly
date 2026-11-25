@@ -278,7 +278,7 @@ function build3D() {
     }
   });
 
-  new THREE.GLTFLoader().load('board.glb', gltf => {
+  loadModel().then(buf => new THREE.GLTFLoader().parse(buf, '', gltf => {
     const root = gltf.scene; T3.root = root; scene.add(root);
     root.traverse(o => { if (o.name && byRef[o.name] && !T3.objs[o.name]) T3.objs[o.name] = o; });
     fixMaterials(root);
@@ -287,10 +287,34 @@ function build3D() {
     tmsg.hidden = true; T3.ready = true;
     highlight3D();
     if (view === 'iso') { T3.running = true; resize3D(); loop3D(); }
-  }, xhr => {
-    if (xhr.total) tmsg.textContent = '載入 3D 模型中… ' + Math.round(xhr.loaded / xhr.total * 100) + '%';
-  }, () => fail3D());
+  }, () => fail3D())).catch(() => fail3D());
   resize3D();
+}
+// board.glb on a normal web server; board.json (the same file, base64) where .glb is not served
+async function fetchWithProgress(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(url + ' ' + res.status);
+  const total = +res.headers.get('content-length') || 0;
+  if (!res.body || !total) return new Uint8Array(await res.arrayBuffer());
+  const reader = res.body.getReader(); const chunks = []; let got = 0;
+  for (;;) {
+    const { done, value } = await reader.read(); if (done) break;
+    chunks.push(value); got += value.length;
+    tmsg.textContent = '載入 3D 模型中… ' + Math.min(99, Math.round(got / total * 100)) + '%';
+  }
+  const out = new Uint8Array(got); let p = 0; chunks.forEach(c => { out.set(c, p); p += c.length; });
+  return out;
+}
+async function loadModel() {
+  try {
+    const bytes = await fetchWithProgress('board.glb');
+    if (bytes[0] === 0x67 && bytes[1] === 0x6c && bytes[2] === 0x54 && bytes[3] === 0x46) return bytes.buffer;   // "glTF"
+  } catch (e) {}
+  const txt = new TextDecoder().decode(await fetchWithProgress('board.json'));
+  const bin = atob(JSON.parse(txt).glb);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out.buffer;
 }
 function resize3D() {
   if (!T3.renderer) return;
