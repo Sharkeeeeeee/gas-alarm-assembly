@@ -17,16 +17,16 @@ img{max-width:100%}
 :root{
   --bg:#f2f4f0; --panel:#ffffff; --ink:#17201b; --muted:#59665e; --line:#d6ddd6;
   --mask:#1f3d2e; --copper:#a85a24; --hl:#e09a2b; --hl-soft:rgba(224,154,43,.22);
-  --done:#2f7d4f; --on-mask:#ffffff;
+  --done:#2f7d4f; --on-mask:#ffffff; --stage3d:#dde4de;
   --f-body:"Noto Sans TC",system-ui,-apple-system,"Microsoft JhengHei",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#111613; --panel:#1a211d; --ink:#e4ebe6; --muted:#9aa79f; --line:#2c3630;
-  --mask:#2f5a44; --copper:#d88a52; --hl:#f0b04a; --hl-soft:rgba(240,176,74,.25); --done:#5cb983; --on-mask:#ffffff; color-scheme:dark}}
+  --mask:#2f5a44; --copper:#d88a52; --hl:#f0b04a; --hl-soft:rgba(240,176,74,.25); --done:#5cb983; --on-mask:#ffffff; --stage3d:#1c2520; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#111613; --panel:#1a211d; --ink:#e4ebe6; --muted:#9aa79f; --line:#2c3630;
-  --mask:#2f5a44; --copper:#d88a52; --hl:#f0b04a; --hl-soft:rgba(240,176,74,.25); --done:#5cb983; --on-mask:#ffffff; color-scheme:dark}
+  --mask:#2f5a44; --copper:#d88a52; --hl:#f0b04a; --hl-soft:rgba(240,176,74,.25); --done:#5cb983; --on-mask:#ffffff; --stage3d:#1c2520; color-scheme:dark}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.6;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
 .wrap{max-width:1180px;margin:0 auto;display:grid;gap:28px}
@@ -46,6 +46,12 @@ header{display:grid;gap:4px}
 .hs{position:absolute;border:1.5px solid transparent;border-radius:3px;background:transparent;cursor:pointer;padding:0}
 .hs:hover{border-color:rgba(255,255,255,.75)}
 .hs.on{border-color:var(--hl);background:var(--hl-soft);box-shadow:0 0 0 2px rgba(0,0,0,.35)}
+.three{position:relative;width:100%;aspect-ratio:16/9;min-height:300px;background:var(--stage3d);line-height:normal}
+.three canvas{display:block;width:100%;height:100%;cursor:grab}
+.three canvas:active{cursor:grabbing}
+.t-msg{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:14px;pointer-events:none}
+.t-reset{position:absolute;top:10px;right:10px;font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:4px 12px;border-radius:999px;cursor:pointer}
+.t-reset:focus-visible{outline:2px solid var(--hl);outline-offset:2px}
 .caption{color:var(--muted);font-size:13px;margin:8px 0 0;line-height:1.5}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:16px 18px;min-width:0}
 .part .ref{font-family:var(--f-mono);font-weight:600;font-size:22px;color:var(--copper)}
@@ -87,11 +93,15 @@ header{display:grid;gap:4px}
     <div style="min-width:0">
       <div class="tabs" role="tablist" aria-label="檢視角度">
         <button class="tab" role="tab" id="tab-top" aria-selected="true" data-v="top">零件面</button>
-        <button class="tab" role="tab" id="tab-iso" aria-selected="false" data-v="iso">立體圖</button>
+        <button class="tab" role="tab" id="tab-iso" aria-selected="false" data-v="iso">立體圖（可旋轉）</button>
         <button class="tab" role="tab" id="tab-bottom" aria-selected="false" data-v="bottom">銅箔面</button>
       </div>
       <div class="stage" id="stage">
         <img id="img" src="top.jpg" alt="負載板零件面 3D 圖" width="1960" height="769">
+        <div class="three" id="three" hidden>
+          <div class="t-msg" id="tmsg">載入 3D 模型中…</div>
+          <button class="t-reset" id="treset" type="button">重設視角</button>
+        </div>
       </div>
       <p class="caption" id="cap">點板子上的零件看規格和方向。板子左邊是電源輸入，右邊是警報輸出。</p>
     </div>
@@ -141,7 +151,7 @@ const imgs = {top:'top.jpg', iso:'iso.jpg', bottom:'bottom.jpg'};
 const alts = {top:'負載板零件面 3D 圖', iso:'負載板立體 3D 圖', bottom:'負載板銅箔面 3D 圖（左右相反）'};
 const caps = {
   top:'點板子上的零件看規格和方向。板子左邊是電源輸入，右邊是警報輸出。',
-  iso:'從前方斜看的立體圖。MQ-2 和 VR1 在 KiCad 裡沒有 3D 模型，只畫出外框。',
+  iso:'拖曳旋轉，滾輪或兩指縮放，右鍵或兩指拖曳平移。點零件看說明。MQ-2 和 VR1 在 KiCad 裡沒有 3D 模型，這裡是簡化的示意形狀。',
   bottom:'從銅箔面看，左右是相反的。JP3 焊在這一面，點它看說明。'
 };
 let view = 'top';
@@ -177,18 +187,206 @@ function showPart(ref) {
 }
 function pick(refs) {
   sel = new Set(refs);
-  const want = refs.some(r => byRef[r] && byRef[r].side === 'bottom') ? 'bottom' : 'top';
-  if (view !== want) setView(want); else drawHotspots();
+  if (view === 'iso') {
+    highlight3D();
+  } else {
+    const want = refs.some(r => byRef[r] && byRef[r].side === 'bottom') ? 'bottom' : 'top';
+    if (view !== want) setView(want); else drawHotspots();
+  }
   showPart(refs[0]);
   document.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', sel.has(c.dataset.ref)));
 }
 function setView(v) {
   view = v;
-  img.src = imgs[v];
-  img.alt = alts[v];
+  const is3D = v === 'iso';
+  img.hidden = is3D;
+  threeBox.hidden = !is3D;
+  if (!is3D) { img.src = imgs[v]; img.alt = alts[v]; }
   document.getElementById('cap').textContent = caps[v];
   document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.v === v ? 'true' : 'false'));
   drawHotspots();
+  if (is3D) start3D(); else stop3D();
+}
+
+/* ---------- rotatable 3D view (three.js, loaded on first use) ---------- */
+const threeBox = document.getElementById('three');
+const tmsg = document.getElementById('tmsg');
+const T3 = { ready: false, loading: false, failed: false, running: false, helpers: [], objs: {} };
+const LIBS = [
+  'https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js',
+  'https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js',
+  'https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js'
+];
+const BOARD_TOP = 0.0016;            // board surface height in the model (metres)
+const HOME = { pos: [0, 0.11, 0.14], target: [0, 0.003, 0] };
+function loadScript(src) {
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error(src)); document.head.appendChild(s); });
+}
+function fail3D() {
+  T3.failed = true;
+  tmsg.textContent = '這台裝置沒辦法顯示可旋轉的 3D，改顯示立體圖。';
+  img.src = imgs.iso; img.alt = alts.iso; img.hidden = false; threeBox.hidden = true;
+}
+async function start3D() {
+  if (T3.failed) { fail3D(); return; }
+  if (T3.ready) { T3.running = true; resize3D(); loop3D(); return; }
+  if (T3.loading) return;
+  T3.loading = true;
+  try {
+    for (const u of LIBS) await loadScript(u);
+    build3D();
+  } catch (e) { fail3D(); }
+}
+function stop3D() { T3.running = false; }
+function build3D() {
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true }); } catch (e) { fail3D(); return; }
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  threeBox.prepend(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 16 / 9, 0.002, 5);
+  camera.position.set(...HOME.pos);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x3a4a40, 0.85));
+  const key = new THREE.DirectionalLight(0xffffff, 1.0); key.position.set(0.12, 0.3, 0.2); scene.add(key);
+  const under = new THREE.DirectionalLight(0xffffff, 0.45); under.position.set(-0.1, -0.3, -0.1); scene.add(under);
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.target.set(...HOME.target);
+  controls.enableDamping = true;
+  controls.minDistance = 0.05; controls.maxDistance = 0.6;
+  controls.autoRotate = true; controls.autoRotateSpeed = 1.2;
+  controls.addEventListener('start', () => { controls.autoRotate = false; });
+  Object.assign(T3, { renderer, scene, camera, controls });
+
+  document.getElementById('treset').addEventListener('click', () => {
+    camera.position.set(...HOME.pos); controls.target.set(...HOME.target); controls.update();
+  });
+  new ResizeObserver(resize3D).observe(threeBox);
+
+  // click (not drag) on a part selects it
+  let down = null;
+  renderer.domElement.addEventListener('pointerdown', e => { down = [e.clientX, e.clientY]; });
+  renderer.domElement.addEventListener('pointerup', e => {
+    if (!down || Math.hypot(e.clientX - down[0], e.clientY - down[1]) > 5 || !T3.root) return;
+    const r = renderer.domElement.getBoundingClientRect();
+    const m = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+    const ray = new THREE.Raycaster(); ray.setFromCamera(m, camera);
+    for (const hit of ray.intersectObject(T3.root, true)) {
+      let o = hit.object;
+      while (o && !(o.name && byRef[o.name])) o = o.parent;
+      if (o) { pick([o.name]); return; }
+    }
+  });
+
+  new THREE.GLTFLoader().load('board.glb', gltf => {
+    const root = gltf.scene; T3.root = root; scene.add(root);
+    root.traverse(o => { if (o.name && byRef[o.name] && !T3.objs[o.name]) T3.objs[o.name] = o; });
+    fixMaterials(root);
+    recolorLED2();
+    addStandIns(root);
+    tmsg.hidden = true; T3.ready = true;
+    highlight3D();
+    if (view === 'iso') { T3.running = true; resize3D(); loop3D(); }
+  }, xhr => {
+    if (xhr.total) tmsg.textContent = '載入 3D 模型中… ' + Math.round(xhr.loaded / xhr.total * 100) + '%';
+  }, () => fail3D());
+  resize3D();
+}
+function resize3D() {
+  if (!T3.renderer) return;
+  const w = threeBox.clientWidth, h = threeBox.clientHeight;
+  if (!w || !h) return;
+  T3.renderer.setSize(w, h, false);
+  T3.camera.aspect = w / h; T3.camera.updateProjectionMatrix();
+}
+function loop3D() {
+  if (!T3.running || T3.looping) return;
+  T3.looping = true;
+  const tick = () => {
+    if (!T3.running) { T3.looping = false; return; }
+    T3.controls.update();
+    T3.helpers.forEach(h => h.update());
+    T3.renderer.render(T3.scene, T3.camera);
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+// KiCad leaves metalness unset (glTF then means fully metallic) and adds a solder mask
+// the real home-etched board does not have, so restyle it as bare fibreglass + copper.
+function fixMaterials(root) {
+  const lin = c => c.clone().convertLinearToSRGB();
+  root.traverse(o => {
+    if (!o.isMesh) return;
+    const m = o.material;
+    if (!m.userData.fixed) {
+      m.userData.fixed = true;
+      m.metalness = 0.05; m.roughness = 0.6;
+      const c = lin(m.color);
+      if (c.r > 0.4 && c.b < 0.05 * c.r + 0.02 && c.g > 0.3 * c.r) {        // copper
+        m.color.setHex(0xc27a45).convertSRGBToLinear(); m.metalness = 0.35; m.roughness = 0.45;
+        m.userData.copper = true;
+      }
+      m.needsUpdate = true;
+    }
+    o.geometry.computeBoundingBox();
+    const b = o.geometry.boundingBox;
+    if (b.max.x - b.min.x > 0.15 && b.max.z - b.min.z > 0.06) {          // board-sized layer
+      if (m.transparent && m.opacity < 0.95 && lin(m.color).g > lin(m.color).r) o.visible = false;   // solder mask
+      else if (!m.userData.copper && !m.transparent && !m.userData.glass) {
+        m.userData.glass = true;
+        m.color.setHex(0xd9cfa0).convertSRGBToLinear(); m.roughness = 0.8;          // fibreglass
+      }
+    }
+  });
+}
+function recolorLED2() {
+  const led = T3.objs.LED2; if (!led) return;
+  led.traverse(o => {
+    if (!o.isMesh) return;
+    const c = o.material.color;
+    if (c && c.r > 0.3 && c.g < 0.2 && c.b < 0.2) {
+      o.material = o.material.clone();
+      o.material.color.setHex(0x1fbf4a).convertSRGBToLinear();
+    }
+  });
+}
+function mesh(geo, hex, opts) {
+  const mat = new THREE.MeshStandardMaterial(Object.assign({ color: new THREE.Color(hex).convertSRGBToLinear(), roughness: 0.6, metalness: 0.0 }, opts || {}));
+  return new THREE.Mesh(geo, mat);
+}
+function addStandIns(root) {
+  // MQ-2: 6 pins, raised 4 mm, bakelite base and stainless mesh cap
+  const mq = new THREE.Group(); mq.name = 'MQ1';
+  mq.position.set(-0.03814, BOARD_TOP, -0.01864);
+  [[-3.36,-3.36],[-4.75,0],[-3.36,3.36],[3.36,3.36],[4.75,0],[3.36,-3.36]].forEach(([x, z]) => {
+    const p = mesh(new THREE.CylinderGeometry(0.0005, 0.0005, 0.005, 8), 0xc9c9c9, { metalness: 0.8, roughness: 0.35 });
+    p.position.set(x / 1000, 0.0025, z / 1000); mq.add(p);
+  });
+  const base = mesh(new THREE.CylinderGeometry(0.0085, 0.0085, 0.004, 40), 0x3b2a1f);
+  base.position.y = 0.006; mq.add(base);
+  const cap = mesh(new THREE.CylinderGeometry(0.0099, 0.0099, 0.009, 40), 0xa7adb2, { metalness: 0.7, roughness: 0.45 });
+  cap.position.y = 0.0125; mq.add(cap);
+  const top = mesh(new THREE.CircleGeometry(0.0075, 40), 0x7d8389, { metalness: 0.6, roughness: 0.6 });
+  top.rotation.x = -Math.PI / 2; top.position.y = 0.0171; mq.add(top);
+  root.add(mq); T3.objs.MQ1 = mq;
+  // 3386P trimmer: blue body with an adjust screw
+  const vr = new THREE.Group(); vr.name = 'VR1';
+  vr.position.set(-0.0395, BOARD_TOP, 0.00746);
+  const body = mesh(new THREE.BoxGeometry(0.0095, 0.0048, 0.0095), 0x2f5fc4);
+  body.position.y = 0.0024; vr.add(body);
+  const screw = mesh(new THREE.CylinderGeometry(0.0021, 0.0021, 0.0006, 24), 0xe8e2d0, { metalness: 0.3 });
+  screw.position.y = 0.0051; vr.add(screw);
+  const slot = mesh(new THREE.BoxGeometry(0.0034, 0.0003, 0.0005), 0x555555);
+  slot.position.y = 0.0055; slot.rotation.y = 0.6; vr.add(slot);
+  root.add(vr); T3.objs.VR1 = vr;
+}
+function highlight3D() {
+  if (!T3.ready) return;
+  T3.helpers.forEach(h => T3.scene.remove(h)); T3.helpers = [];
+  sel.forEach(r => {
+    const o = T3.objs[r]; if (!o) return;
+    const h = new THREE.BoxHelper(o, 0xf0b04a); T3.scene.add(h); T3.helpers.push(h);
+  });
 }
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setView(t.dataset.v)));
 
